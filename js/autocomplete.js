@@ -9,7 +9,8 @@
     sortFunction: function(a, b, inputString) {
       // Sort function for sorting autocomplete results
       return a.indexOf(inputString) - b.indexOf(inputString);
-    }
+    },
+    useCustomData: false
   };
 
   /**
@@ -156,6 +157,7 @@
         autoFocus: false,
         closeOnClick: false,
         coverTrigger: false,
+        constrainWidth: false,
         onItemClick: (itemEl) => {
           this.selectOption($(itemEl));
         }
@@ -284,6 +286,7 @@
      */
     _highlight(string, $el) {
       let img = $el.find('img');
+      let data = $el.find('span').attr('data');
       let matchStart = $el
           .text()
           .toLowerCase()
@@ -293,7 +296,7 @@
         matchText = $el.text().slice(matchStart, matchEnd + 1),
         afterMatch = $el.text().slice(matchEnd + 1);
       $el.html(
-        `<span>${beforeMatch}<span class='highlight'>${matchText}</span>${afterMatch}</span>`
+        `<span data="${data}">${beforeMatch}<span class='highlight'>${matchText}</span>${afterMatch}</span>`
       );
       if (img.length) {
         $el.prepend(img);
@@ -329,10 +332,17 @@
       this.$el.trigger('change');
       this._resetAutocomplete();
       this.close();
-
+      let event = { value: text };
+      if (this.options.useCustomData) {
+        let data = $(el)
+          .find('span')
+          .attr('data');
+        let customData = JSON.parse(data);
+        event['data'] = customData;
+      }
       // Handle onAutocomplete callback.
       if (typeof this.options.onAutocomplete === 'function') {
-        this.options.onAutocomplete.call(this, text);
+        this.options.onAutocomplete.call(this, event);
       }
     }
 
@@ -378,10 +388,13 @@
       for (let i = 0; i < matchingData.length; i++) {
         let entry = matchingData[i];
         let $autocompleteOption = $('<li></li>');
-        if (!!entry.data) {
+        if (!!entry.data && !this.options.useCustomData) {
           $autocompleteOption.append(
             `<img src="${entry.data}" class="right circle"><span>${entry.key}</span>`
           );
+        } else if (this.options.useCustomData) {
+          let stringData = JSON.stringify(entry.data);
+          $autocompleteOption.append(`<span data="${stringData}">${entry.key}</span>`);
         } else {
           $autocompleteOption.append('<span>' + entry.key + '</span>');
         }

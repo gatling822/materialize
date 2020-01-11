@@ -6,10 +6,12 @@
     placeholder: '',
     secondaryPlaceholder: '',
     autocompleteOptions: {},
+    autocompleteOnly: false,
     limit: Infinity,
     onChipAdd: null,
     onChipSelect: null,
-    onChipDelete: null
+    onChipDelete: null,
+    validator: null
   };
 
   /**
@@ -267,9 +269,11 @@
         }
 
         e.preventDefault();
-        this.addChip({
-          tag: this.$input[0].value
-        });
+        if (!this.hasAutocomplete || (this.hasAutocomplete && !this.options.autocompleteOnly)) {
+          this.addChip({
+            tag: this.$input[0].value
+          });
+        }
         this.$input[0].value = '';
 
         // delete or left
@@ -331,9 +335,10 @@
      * Setup Autocomplete
      */
     _setupAutocomplete() {
-      this.options.autocompleteOptions.onAutocomplete = (val) => {
+      this.options.autocompleteOptions.onAutocomplete = (event) => {
         this.addChip({
-          tag: val
+          tag: event.value,
+          data: event.data
         });
         this.$input[0].value = '';
         this.$input[0].focus();
@@ -392,7 +397,11 @@
             break;
           }
         }
-        return !exists;
+        if (typeof this.options.validator === 'function') {
+          return !exists && this.options.validator.call(this, chip);
+        } else {
+          return !exists;
+        }
       }
 
       return false;
