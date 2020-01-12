@@ -329,17 +329,15 @@
     selectOption(el) {
       let text = el.text().trim();
       this.el.value = text;
-      this.$el.trigger('change');
-      this._resetAutocomplete();
-      this.close();
       let event = { value: text };
       if (this.options.useCustomData) {
-        let data = $(el)
-          .find('span')
-          .attr('data');
+        let data = el.find('span').attr('data');
         let customData = JSON.parse(data);
         event['data'] = customData;
       }
+      this.$el.trigger('change');
+      this._resetAutocomplete();
+      this.close();
       // Handle onAutocomplete callback.
       if (typeof this.options.onAutocomplete === 'function') {
         this.options.onAutocomplete.call(this, event);
